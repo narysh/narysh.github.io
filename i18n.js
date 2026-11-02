@@ -92,8 +92,8 @@
     window.siteLanguage=lang==='en'?'en':'ru';
     document.documentElement.lang=window.siteLanguage;
     translate(document.body);
-    document.title=window.siteText('NARYSH — По ту сторону интерфейса');
-    document.querySelector('meta[name="description"]').content=window.siteText('Сергей Нарышев. Android-разработка, Rust и алгоритмы. Личное пространство по ту сторону интерфейса.');
+    document.title=window.siteLanguage==='en'?"Sergey Naryshev \u2014 Android Developer, Rust & Algorithms":"Нарышев Сергей — Android-разработчик, Rust и алгоритмы";
+    document.querySelector('meta[name="description"]').content=window.siteLanguage==='en'?"Sergey Naryshev \u2014 Software Engineering student at St Petersburg University. Android apps in Kotlin, Rust projects and algorithm research. Portfolio and contact links.":"Нарышев Сергей Иванович — студент программной инженерии СПбГУ. Android-приложения на Kotlin, проекты на Rust и исследования алгоритмов. Портфолио и контакты.";
     languageButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.language===window.siteLanguage)));
     try{localStorage.setItem('narysh-lang',window.siteLanguage);if(updateUrl){const url=new URL(location.href);url.searchParams.set('lang',window.siteLanguage);history.replaceState(null,'',url);}}catch{}
     window.dispatchEvent(new CustomEvent('site:language',{detail:{language:window.siteLanguage}}));
