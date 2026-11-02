@@ -1,0 +1,14 @@
+/* Keep the original visual system without viewport-wide filtered layers. */
+.noise,.scanline{display:none}
+.human #core{filter:none}
+.system-controls{background:#0d140df5;backdrop-filter:none}
+.human .system-controls{background:#eeeaddf5;backdrop-filter:none}
+dialog::backdrop{backdrop-filter:none;background:#030703eb}
+.human dialog::backdrop{backdrop-filter:none;background:#3e3a2e9c}
+.control-letter{will-change:auto}
+.control-released .control-letter{will-change:transform}
+.disruption .construct{filter:none}
+.ticker>div,.weather-phone,.weather-orbit,.phone-sun,.data-cloud i{animation-play-state:paused}
+.ticker.effects-visible>div,.effects-visible .weather-phone,.effects-visible .weather-orbit,.effects-visible .phone-sun,.effects-visible .data-cloud i{animation-play-state:running}
+
+#core{cursor:grab;touch-action:pan-y pinch-zoom;user-select:none;-webkit-user-select:none}#core.is-grabbing{cursor:grabbing}#core:focus-visible{outline:1px dashed var(--green);outline-offset:-10px}.orbit-hint{position:absolute;top:55px;left:24px;right:24px;font:7px var(--mono);letter-spacing:.5px;color:var(--muted);pointer-events:none;line-height:1.6}.construct-label,.object-point{pointer-events:none}.construct-label button{pointer-events:auto}@media(max-width:700px){.orbit-hint{font-size:6px;left:15px;right:15px;top:48px}}
