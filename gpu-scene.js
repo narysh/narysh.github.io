@@ -5,12 +5,28 @@
     attribute vec3 aPosition;
     attribute vec3 aMeta;
     uniform vec2 uResolution, uCenter;
-    uniform float uBase, uRotation, uTilt, uBurst, uProgress, uJourney, uCount, uDpr, uTime;
+    uniform float uBase, uRotation, uTilt, uBurst, uProgress, uJourney, uCount, uDpr, uTime, uForm, uOpacity;
     varying float vGlyph, vAlpha;
     float ease(float t) { return t*t*(3.0-2.0*t); }
     void main() {
       float spread = 1.0 + uBurst*aMeta.y;
       vec3 v = aPosition*spread;
+      if(uForm>=0.0){
+        float edge=aMeta.z/uCount*4.0, t=fract(edge);
+        vec3 phone;
+        if(edge<1.0)phone=vec3(-.85+t*1.7,-1.5,0.0);
+        else if(edge<2.0)phone=vec3(.85,-1.5+t*3.0,0.0);
+        else if(edge<3.0)phone=vec3(.85-t*1.7,1.5,0.0);
+        else phone=vec3(-.85,1.5-t*3.0,0.0);
+        phone.z=sin(aMeta.z*.7)*.045;
+        float edgeId=mod(aMeta.z,24.0),gt=fract(aMeta.z/24.0/18.0),ring=floor(edgeId/8.0),a=mod(edgeId,8.0)*.785398,b=a+(ring<1.0?.785398:1.570796);
+        vec3 graph=mix(vec3(cos(a),sin(a),ring-1.0),vec3(cos(b),sin(b),ring<2.0?ring:-1.0),gt)*1.45;
+        float angle=aMeta.z/uCount*6.283185*3.0, radius=1.0+mod(floor(aMeta.z/200.0),3.0)*.34;
+        vec3 signal=vec3(cos(angle)*radius,sin(angle)*radius*.75,(floor(aMeta.z/200.0)-1.0)*.5);
+        v=mix(v,phone,ease(clamp(uForm,0.0,1.0)));
+        v=mix(v,graph,ease(clamp(uForm-1.0,0.0,1.0)));
+        v=mix(v,signal,ease(clamp(uForm-2.0,0.0,1.0)));
+      }
       float c=cos(uRotation),s=sin(uRotation),ct=cos(uTilt),st=sin(uTilt);
       float x=v.x*c+v.z*s,z=-v.x*s+v.z*c;
       float y=v.y*ct-z*st, depth=v.y*st+z*ct;
@@ -57,7 +73,7 @@
       }
       gl_Position=vec4(point/uResolution*vec2(2.0,-2.0)+vec2(-1.0,1.0),0.0,1.0);
       gl_PointSize=size*1.5*uDpr;
-      vGlyph=aMeta.x;vAlpha=alpha;
+      vGlyph=aMeta.x;vAlpha=alpha*uOpacity;
     }`;
   const fragment = `
     precision mediump float;
@@ -98,7 +114,7 @@
       gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);
       for(const [name,offset]of[['aPosition',0],['aMeta',12]]){const loc=gl.getAttribLocation(program,name);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,3,gl.FLOAT,false,24,offset);}
       this.uniforms={};
-      for(const name of ['Resolution','Center','Base','Rotation','Tilt','Burst','Progress','Journey','Count','Dpr','Time','GlyphCount','Color','Atlas'])this.uniforms[name]=gl.getUniformLocation(program,'u'+name);
+      for(const name of ['Resolution','Center','Base','Rotation','Tilt','Burst','Progress','Journey','Count','Dpr','Time','GlyphCount','Color','Atlas','Form','Opacity'])this.uniforms[name]=gl.getUniformLocation(program,'u'+name);
       const texture=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
@@ -111,13 +127,13 @@
     upload(){if(!this.gl||this.lost)return;const data=new Float32Array(this.points.length*6);this.points.forEach((p,i)=>data.set([p.x,p.y,p.z,p.g,p.scatter||0,i],i*6));const gl=this.gl;gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);}
     render(options){
       this.last=options;
-      if(!this.gl||this.lost){this.fallback(options);return;}
+      if(!this.gl||this.lost){if(options.form!==undefined)this.overlay.getContext('2d').clearRect(0,0,this.overlay.width,this.overlay.height);this.fallback(options);return;}
       const gl=this.gl,u=this.uniforms,o=options;
       if(this.surface.width!==this.overlay.width||this.surface.height!==this.overlay.height){this.surface.width=this.overlay.width;this.surface.height=this.overlay.height;}
-      gl.viewport(0,0,this.surface.width,this.surface.height);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(this.program);
+      gl.viewport(0,0,this.surface.width,this.surface.height);if(!o.preserve)gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(this.program);
       gl.uniform2f(u.Resolution,o.w,o.h);gl.uniform2f(u.Center,o.cx,o.cy);
-      for(const [key,value]of Object.entries({Base:o.base,Rotation:o.rotation,Tilt:o.tilt,Burst:o.burst||0,Progress:o.p||0,Journey:o.journey?1:0,Count:this.points.length,Dpr:this.surface.width/o.w,Time:o.time||0}))gl.uniform1f(u[key],value);
-      gl.uniform3f(u.Color,...(o.human?[.57,.263,.153]:[.71,1,.235]));
+      for(const [key,value]of Object.entries({Base:o.base,Rotation:o.rotation,Tilt:o.tilt,Burst:o.burst||0,Progress:o.p||0,Journey:o.journey?1:0,Count:this.points.length,Dpr:this.surface.width/o.w,Time:o.time||0,Form:o.form===undefined?-1:o.form,Opacity:o.alpha===undefined?1:o.alpha}))gl.uniform1f(u[key],value);
+      gl.uniform3f(u.Color,...(o.ink||(o.human?[.57,.263,.153]:[.71,1,.235])));
       gl.drawArrays(gl.POINTS,0,this.points.length);
       if(RenderKit.profile){this.overlay.dataset.sceneTime=(o.time||0).toFixed(3);this.overlay.dataset.rotation=o.rotation.toFixed(4);}
     }
@@ -126,7 +142,8 @@
       const c=Math.cos(o.rotation),s=Math.sin(o.rotation),ct=Math.cos(o.tilt),st=Math.sin(o.tilt),p=o.p||0;
       const phone=ease(clamp((p-.3)/.18,0,1)),index=ease(clamp((p-.64)/.21,0,1)),zoom=1+Math.pow(ease(clamp(p/.35,0,1)),3)*5;
       this.points.forEach((v,i)=>{
-        const spread=1+(o.burst||0)*(v.scatter||0),x=v.x*spread,y=v.y*spread,z=v.z*spread;
+        const spread=1+(o.burst||0)*(v.scatter||0);let x=v.x*spread,y=v.y*spread,z=v.z*spread;
+        if(o.form!==undefined){const f=o.form,edge=i/this.points.length*4,t=edge%1,px=edge<1?-.85+t*1.7:edge<2?.85:edge<3?.85-t*1.7:-.85,py=edge<1?-1.5:edge<2?-1.5+t*3:edge<3?1.5:1.5-t*3;const p1=ease(clamp(f,0,1));x=mix(x,px,p1);y=mix(y,py,p1);z=mix(z,0,p1);const id=i%24,gt=(i/24/18)%1,ring=Math.floor(id/8),a=(id%8)*Math.PI/4,b=a+(ring<1?Math.PI/4:Math.PI/2),p2=ease(clamp(f-1,0,1));x=mix(x,mix(Math.cos(a),Math.cos(b),gt)*1.45,p2);y=mix(y,mix(Math.sin(a),Math.sin(b),gt)*1.45,p2);z=mix(z,mix(ring-1,ring<2?ring:-1,gt)*1.45,p2);const angle=i/this.points.length*Math.PI*6,rad=1+Math.floor(i/200)%3*.34,p3=ease(clamp(f-2,0,1));x=mix(x,Math.cos(angle)*rad,p3);y=mix(y,Math.sin(angle)*rad*.75,p3);z=mix(z,(Math.floor(i/200)-1)*.5,p3);}
         const xx=x*c+z*s,zz=-x*s+z*c,yy=y*ct-zz*st,depth=y*st+zz*ct,pr=5/Math.max(.8,5+depth);
         let px=o.cx+xx*o.base*pr,py=o.cy+yy*o.base*pr,size=clamp(7.8*pr,6,11),alpha=clamp((2.9-depth)/4.4,.15,1)*.9;
         if(o.journey){
@@ -142,7 +159,7 @@
           size=mix(clamp(6.5*pr*zoom,6,18),6,phone);
         }
         if(px< -30||px>o.w+30||py< -30||py>o.h+30)return;
-        RenderKit.glyph(ctx,v.g,px,py,size,alpha,o.human);
+        RenderKit.glyph(ctx,v.g,px,py,size,alpha*(o.alpha===undefined?1:o.alpha),o.human);
       });
     }
   }

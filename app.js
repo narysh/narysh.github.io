@@ -53,7 +53,11 @@ function draw(dt){
     const px=(col+.5)*width/8,py=(sceneTime*(12+col%5*4)+col*79)%(height+100)-50;
     RenderKit.glyph(ctx,(col*7+Math.floor(sceneTime*2))%chars.length,px,py,8,.2,human);
   }
-  coreScene.render({w:width,h:height,cx,cy,base:scale,rotation,tilt,burst,time:sceneTime,human});
+  const coreOptions={w:width,h:height,cx,cy,base:scale,rotation,tilt,burst,time:sceneTime,human};
+  if(bulletMix>.05&&coreScene.gl){
+    for(let i=3;i>0;i--)coreScene.render({...coreOptions,rotation:rotation-i*.19*bulletMix,alpha:(.07+(3-i)*.035)*bulletMix,preserve:i<3});
+    coreScene.render({...coreOptions,preserve:true});
+  }else coreScene.render(coreOptions);
   const radius=Math.min(width,height)*.395;
   ctx.strokeStyle=human?'#b2482a30':'#b5ff3c20';ctx.lineWidth=.7;
   ctx.beginPath();ctx.ellipse(cx,cy,radius,radius*.96,0,0,Math.PI*2);ctx.stroke();
