@@ -38,11 +38,20 @@
         point=mix(point,uCenter+phonePoint,phone);
         float col=mod(aMeta.z,30.0),row=mod(floor(aMeta.z/30.0),45.0);
         float iw=uResolution.x*(uResolution.x<700.0?.73:.43),ih=uResolution.y*.46;
-        vec2 indexPoint=uCenter+vec2((col/29.0-.5)*iw,(row/44.0-.5)*ih);
-        indexPoint.x+=sin(uTime*.65+row*.28)*2.5;
+        float edgeId=mod(aMeta.z,24.0), t=fract(aMeta.z/24.0/18.0);
+        float ring=floor(edgeId/8.0), a=mod(edgeId,8.0)*.785398;
+        float b=a+(ring<1.0?.785398:1.570796);
+        vec3 start=vec3(cos(a),sin(a),ring-1.0);
+        vec3 end=ring<2.0?vec3(cos(b),sin(b),ring):vec3(cos(b),sin(b),-1.0);
+        vec3 graph=mix(start,end,t);
+        float gr=uTime*.15, gc=cos(gr),gs=sin(gr);
+        vec3 spun=vec3(graph.x*gc+graph.z*gs,graph.y,-graph.x*gs+graph.z*gc);
+        float gp=3.0/(3.0+spun.z*.45);
+        vec2 indexPoint=uCenter+vec2(spun.x*iw*.42,spun.y*ih*.55)*gp;
+        indexPoint+=vec2(sin(aMeta.z),cos(aMeta.z))*.8;
         point=mix(point,indexPoint,index);
         alpha=clamp((3.0-depth)/5.0,.15,1.0)*.8;
-        if(index>.6 && mod(col,5.0)>.1 && mod(row,7.0)>.1)alpha*=.16;
+        if(index>.6)alpha*=mix(.3,1.0,pow(abs(cos(t*3.14159)),12.0));
         if(phone>.8 && index<.2)alpha*=.35;
         size=mix(clamp(6.5*perspective*zoom,6.0,18.0),6.0,phone);
       }
@@ -127,7 +136,7 @@
           const breath=1+.012*Math.sin((o.time||0)*.8);tx=(tx+Math.sin(i)*3)*breath;ty=(ty+Math.cos(i)*3)*breath;
           px=mix(px,o.cx+tx,phone);py=mix(py,o.cy+ty,phone);
           const col=i%30,row=Math.floor(i/30)%45,iw=o.w*(o.w<700?.73:.43),ih=o.h*.46;
-          px=mix(px,o.cx+(col/29-.5)*iw+Math.sin((o.time||0)*.65+row*.28)*2.5,index);py=mix(py,o.cy+(row/44-.5)*ih,index);
+          const edgeId=i%24,t=(i/24/18)%1,ring=Math.floor(edgeId/8),a=(edgeId%8)*Math.PI/4,b=a+(ring<1?Math.PI/4:Math.PI/2),gx=mix(Math.cos(a),Math.cos(b),t),gy=mix(Math.sin(a),Math.sin(b),t),gz=mix(ring-1,ring<2?ring:-1,t),gr=(o.time||0)*.15,xx=gx*Math.cos(gr)+gz*Math.sin(gr),zz=-gx*Math.sin(gr)+gz*Math.cos(gr),gp=3/(3+zz*.45);px=mix(px,o.cx+xx*iw*.42*gp,index);py=mix(py,o.cy+gy*ih*.55*gp,index);
           alpha=clamp((3-depth)/5,.15,1)*.8*(index>.6&&col%5!==0&&row%7!==0?.16:1);
           if(phone>.8&&index<.2)alpha*=.35;
           size=mix(clamp(6.5*pr*zoom,6,18),6,phone);

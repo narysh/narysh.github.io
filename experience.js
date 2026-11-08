@@ -117,9 +117,7 @@
   function applyMode(mode){state.human=mode==='human';document.body.classList.toggle('human',state.human);document.documentElement.style.colorScheme=state.human?'light':'dark';themeButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));one('meta[name="theme-color"]').setAttribute('content',state.human?'#f1eee6':'#080c09');try{localStorage.setItem('narysh-mode',mode);}catch{}drawJourney();}
   function changeMode(mode,button){
     if(state.human===(mode==='human'))return;
-    // Avoid full-document View Transition snapshots on this long canvas page.
-    applyMode(mode);
-    if(!state.paused&&!reduce.matches)button.animate([{opacity:.45},{opacity:1}],{duration:160});
+    window.Cinematic.theme(mode,button,applyMode);
   }
   themeButtons.forEach(b=>b.addEventListener('click',()=>changeMode(b.dataset.mode,b)));
   let savedMode='system';try{savedMode=localStorage.getItem('narysh-mode')||'system';}catch{}applyMode(savedMode==='human'?'human':'system');
