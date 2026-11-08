@@ -136,7 +136,7 @@
           const breath=1+.012*Math.sin((o.time||0)*.8);tx=(tx+Math.sin(i)*3)*breath;ty=(ty+Math.cos(i)*3)*breath;
           px=mix(px,o.cx+tx,phone);py=mix(py,o.cy+ty,phone);
           const col=i%30,row=Math.floor(i/30)%45,iw=o.w*(o.w<700?.73:.43),ih=o.h*.46;
-          const edgeId=i%24,t=(i/24/18)%1,ring=Math.floor(edgeId/8),a=(edgeId%8)*Math.PI/4,b=a+(ring<1?Math.PI/4:Math.PI/2),gx=mix(Math.cos(a),Math.cos(b),t),gy=mix(Math.sin(a),Math.sin(b),t),gz=mix(ring-1,ring<2?ring:-1,t),gr=(o.time||0)*.15,xx=gx*Math.cos(gr)+gz*Math.sin(gr),zz=-gx*Math.sin(gr)+gz*Math.cos(gr),gp=3/(3+zz*.45);px=mix(px,o.cx+xx*iw*.42*gp,index);py=mix(py,o.cy+gy*ih*.55*gp,index);
+          const edgeId=i%24,t=(i/24/18)%1,ring=Math.floor(edgeId/8),a=(edgeId%8)*Math.PI/4,b=a+(ring<1?Math.PI/4:Math.PI/2),gx=mix(Math.cos(a),Math.cos(b),t),gy=mix(Math.sin(a),Math.sin(b),t),gz=mix(ring-1,ring<2?ring:-1,t),gr=(o.time||0)*.15,graphX=gx*Math.cos(gr)+gz*Math.sin(gr),graphZ=-gx*Math.sin(gr)+gz*Math.cos(gr),gp=3/(3+graphZ*.45);px=mix(px,o.cx+graphX*iw*.42*gp,index);py=mix(py,o.cy+gy*ih*.55*gp,index);
           alpha=clamp((3-depth)/5,.15,1)*.8*(index>.6&&col%5!==0&&row%7!==0?.16:1);
           if(phone>.8&&index<.2)alpha*=.35;
           size=mix(clamp(6.5*pr*zoom,6,18),6,phone);
